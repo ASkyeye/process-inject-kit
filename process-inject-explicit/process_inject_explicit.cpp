@@ -2,16 +2,9 @@
 #include "base\helpers.h"
 
 #ifdef _DEBUG
-#include "base\mock.h"
-
-#if defined _M_X64
-#include "debug.x64.h"
-#elif defined _M_IX86
-#inclue "debug.x86.h"
-#endif
-
 #undef DECLSPEC_IMPORT
 #define DECLSPEC_IMPORT
+#include "base\mock.h"
 #endif
 
 /* is this an x64 BOF */
@@ -25,6 +18,10 @@ BOOL is_x64() {
 
 extern "C" {
 #include "beacon.h"
+#include "sleepmask.h"
+
+    DFR(KERNEL32, GetLastError);
+    #define GetLastError KERNEL32$GetLastError
 
     /* is this a 64-bit or 32-bit process? */
     BOOL is_wow64(HANDLE process) {
@@ -49,15 +46,12 @@ extern "C" {
         return FALSE;
     }
 
-    DFR(KERNEL32, GetLastError);
-    #define GetLastError KERNEL32$GetLastError
-
     void go(char* args, int len, BOOL x86) {
         HANDLE              hProcess;
         datap               parser;
         int                 pid;
         int                 offset;
-        char*               dllPtr;
+        char* dllPtr;
         int                 dllLen;
 
         /* Extract the arguments */
@@ -71,7 +65,7 @@ extern "C" {
             PROCESS_CREATE_THREAD | PROCESS_VM_WRITE | PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_QUERY_INFORMATION,
             FALSE,
             pid);
-        
+
         if (hProcess == INVALID_HANDLE_VALUE || hProcess == 0) {
             BeaconPrintf(CALLBACK_ERROR, "Unable to open process %d : %d", pid, GetLastError);
             return;
@@ -103,12 +97,13 @@ extern "C" {
     }
 }
 
+
 #if defined(_DEBUG) && !defined(_GTEST)
 
 int main(int argc, char* argv[]) {
-    // To pack arguments for the bof use 
-    // bof::runMocked<int, short, const char*>(go, 6502, 42, "foobar");
-    bof::runMocked<int, int, char*>(gox64, 32536, 0, (char*)&debug_dll);
+    // Run BOF's entrypoint
+    // To pack arguments for the bof use e.g.: bof::runMocked<int, short, const char*>(go, 6502, 42, "foobar");
+    bof::runMocked<>(gox64);
 
     return 0;
 }

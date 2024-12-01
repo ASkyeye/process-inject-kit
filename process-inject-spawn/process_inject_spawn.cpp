@@ -2,16 +2,9 @@
 #include "base\helpers.h"
 
 #ifdef _DEBUG
-#include "base\mock.h"
-
-#if defined _M_X64
-#include "debug.x64.h"
-#elif defined _M_IX86
-#inclue "debug.x86.h"
-#endif
-
 #undef DECLSPEC_IMPORT
 #define DECLSPEC_IMPORT
+#include "base\mock.h"
 #endif
 
 /* is this an x64 BOF */
@@ -25,6 +18,7 @@ BOOL is_x64() {
 
 extern "C" {
 #include "beacon.h"
+#include "sleepmask.h"
 
     DFR(MSVCRT, memset);
     #define memset MSVCRT$memset
@@ -77,13 +71,14 @@ extern "C" {
     }
 }
 
+
 #if defined(_DEBUG) && !defined(_GTEST)
 
 int main(int argc, char* argv[]) {
-    // To pack arguments for the bof use 
-    // bof::runMocked<int, short, const char*>(go, 6502, 42, "foobar");
-    bof::runMocked<BOOL, char*>(gox64, TRUE, (char*)&debug_dll);
-    
+    // Run BOF's entrypoint
+    // To pack arguments for the bof use e.g.: bof::runMocked<int, short, const char*>(go, 6502, 42, "foobar");
+    bof::runMocked<>(gox64);
+
     return 0;
 }
 
